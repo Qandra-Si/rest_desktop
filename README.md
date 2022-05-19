@@ -34,14 +34,16 @@ OK
 go get github.com/lib/pq
 
 cd rest_srv
+export SERVERURL=10.0.0.2
 export SERVERPORT=8082
-export DBURL=postgres://testuser:testpassword@localhost/testdb?sslmode=disable
+export DBURL=postgres://testuser:testpassword@10.0.0.2/testdb?sslmode=disable
 go run rest_srv
 ```
 
 Запуск клиента (Windows):
 ```bash
 cd rest_clnt
+set SERVERURL=10.0.0.2
 set SERVERPORT=8082
 go run rest_clnt
 # {"id":1000}
@@ -57,16 +59,16 @@ go run rest_clnt update
 
 Эксперименты с curl (обработка ошибок):
 ```bash
-curl http://localhost:8083/register/
+curl http://10.0.0.2:8083/register/
 # expect method POST at /register/, got GET
-curl -X POST http://localhost:8083/register/
+curl -X POST http://10.0.0.2:8083/register/
 # mime: no media type
 cat params.json
 # {"cname":"EPSON-L3150","cip":"10.0.0.3","user":"printer","at":"2022-05-19T20:44:16.6639767Z"}
-curl --verbose -X POST -H "Content-Type: application/json" -d @params.json http://localhost:8082/register/
+curl --verbose -X POST -H "Content-Type: application/json" -d @params.json http://10.0.0.2:8082/register/
 # < HTTP/1.1 200 OK
 # {"id":1002}
-curl --verbose -X DELETE -H "Content-Type: application/json" -d @params.json http://localhost:8082/unregister/
+curl --verbose -X DELETE -H "Content-Type: application/json" -d @params.json http://10.0.0.2:8082/unregister/
 # < HTTP/1.1 200 OK
 ```
 

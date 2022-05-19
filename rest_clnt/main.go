@@ -65,7 +65,7 @@ func (dc *desktopClient) GetUrl(operation string) (string, string, error) {
 	} else {
 		return "", "", fmt.Errorf("unable to create url for %s method", operation)
 	}
-	return fmt.Sprintf("http://localhost:%s/%s/", os.Getenv("SERVERPORT"), operation), method, nil
+	return fmt.Sprintf("http://%s:%s/%s/", os.Getenv("SERVERURL"), os.Getenv("SERVERPORT"), operation), method, nil
 }
 
 func main() {

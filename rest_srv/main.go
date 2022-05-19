@@ -145,5 +145,5 @@ func main() {
 	mux.HandleFunc("/unregister/", server.unregisterDesktopHandler)
 	mux.HandleFunc("/update/", server.updateDesktopHandler)
 
-	log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("SERVERPORT"), mux))
+	log.Fatal(http.ListenAndServe(os.Getenv("SERVERURL")+":"+os.Getenv("SERVERPORT"), mux))
 }
