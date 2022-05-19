@@ -58,7 +58,11 @@ func (ts *desktopServer) registerDesktopHandler(w http.ResponseWriter, req *http
 		return
 	}
 
-	id := ts.store.CreateDesktop(rd.ComputerName, rd.UserName, rd.Ip, rd.At)
+	id, err := ts.store.RefreshDesktop(rd.ComputerName, rd.UserName, rd.Ip, rd.At)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	js, err := json.Marshal(ResponseId{Id: id})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -128,7 +132,7 @@ func (ts *desktopServer) updateDesktopHandler(w http.ResponseWriter, req *http.R
 		return
 	}
 
-	err2 := ts.store.UpdateDesktop(rd.ComputerName, rd.UserName, rd.Ip, rd.At)
+	_, err2 := ts.store.RefreshDesktop(rd.ComputerName, rd.UserName, rd.Ip, rd.At)
 	if err2 != nil {
 		http.Error(w, err2.Error(), http.StatusNotFound)
 	}
