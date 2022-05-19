@@ -16,14 +16,13 @@ type Desktop struct {
 
 type DesktopStore struct {
 	sync.Mutex
-
-	desktops map[int]Desktop
+	desktops []Desktop
 	nextId   int
 }
 
 func New() *DesktopStore {
 	ts := &DesktopStore{}
-	ts.desktops = make(map[int]Desktop)
+	ts.desktops = []Desktop{}
 	ts.nextId = 0
 	return ts
 }
@@ -37,38 +36,37 @@ func (ds *DesktopStore) CreateDesktop(cname string, cip string, user string, at 
 		CName: cname,
 		CIp:   cip,
 		User:  user,
-		At:    at}
-
-	ds.desktops[ds.nextId] = desktop
+		At:    at,
+	}
+	ds.desktops = append(ds.desktops, desktop)
 	ds.nextId++
 	return desktop.Id
 }
 
-func (ds *DesktopStore) DeleteDesktop(id int) error {
+func (ds *DesktopStore) DeleteDesktop(cname string, cip string, user string, at time.Time) error {
 	ds.Lock()
 	defer ds.Unlock()
 
-	if _, ok := ds.desktops[id]; !ok {
-		return fmt.Errorf("desktop with id=%d not found", id)
+	for i, desktop := range ds.desktops {
+		if desktop.CName == cname {
+			ds.desktops = append(ds.desktops[:i], ds.desktops[i+1:]...)
+			return nil
+		}
 	}
-
-	delete(ds.desktops, id)
-	return nil
+	return fmt.Errorf("desktop with cname=%s not found", cname)
 }
 
-func (ds *DesktopStore) UpdateDesktop(id int, cname string, cip string, user string, at time.Time) error {
+func (ds *DesktopStore) UpdateDesktop(cname string, cip string, user string, at time.Time) error {
 	ds.Lock()
 	defer ds.Unlock()
 
-	if _, ok := ds.desktops[id]; !ok {
-		return fmt.Errorf("desktop with id=%d not found", id)
+	for _, desktop := range ds.desktops {
+		if desktop.CName == cname {
+			desktop.CIp = cip
+			desktop.User = user
+			desktop.At = at
+			return nil
+		}
 	}
-
-	ds.desktops[id] = Desktop{
-		Id:    id,
-		CName: cname,
-		CIp:   cip,
-		User:  user,
-		At:    at}
-	return nil
+	return fmt.Errorf("desktop with cname=%s not found", cname)
 }

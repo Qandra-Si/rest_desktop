@@ -6,6 +6,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"os"
 	"rest_srv/internal/desktopstore"
 	"time"
 )
@@ -19,6 +20,13 @@ func NewDesktopServer() *desktopServer {
 	return &desktopServer{store: store}
 }
 
+type RequestDesktop struct {
+	ComputerName string    `json:"cname"`
+	Ip           string    `json:"cip"`
+	UserName     string    `json:"user"`
+	At           time.Time `json:"at"`
+}
+
 func (ts *desktopServer) registerDesktopHandler(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path != "/register/" || req.Method != http.MethodPost {
 		http.Error(w, fmt.Sprintf("expect method POST at /register/, got %v", req.Method), http.StatusMethodNotAllowed)
@@ -26,13 +34,6 @@ func (ts *desktopServer) registerDesktopHandler(w http.ResponseWriter, req *http
 	}
 
 	log.Printf("handling desktop create at %s\n", req.URL.Path)
-
-	type RequestDesktop struct {
-		ComputerName string    `json:"cname"`
-		Ip           string    `json:"cip"`
-		UserName     string    `json:"user"`
-		At           time.Time `json:"at"`
-	}
 
 	type ResponseId struct {
 		Id int `json:"id"`
@@ -75,10 +76,6 @@ func (ts *desktopServer) unregisterDesktopHandler(w http.ResponseWriter, req *ht
 
 	log.Printf("handling delete desktop at %s\n", req.URL.Path)
 
-	type RequestDesktop struct {
-		Id int `json:"id"`
-	}
-
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
@@ -98,7 +95,7 @@ func (ts *desktopServer) unregisterDesktopHandler(w http.ResponseWriter, req *ht
 		return
 	}
 
-	err2 := ts.store.DeleteDesktop(rd.Id)
+	err2 := ts.store.DeleteDesktop(rd.ComputerName, rd.UserName, rd.Ip, rd.At)
 	if err2 != nil {
 		http.Error(w, err2.Error(), http.StatusNotFound)
 	}
@@ -112,14 +109,6 @@ func (ts *desktopServer) updateDesktopHandler(w http.ResponseWriter, req *http.R
 
 	log.Printf("handling update desktop at %s\n", req.URL.Path)
 
-	type RequestDesktop struct {
-		Id           int       `json:"id"`
-		ComputerName string    `json:"cname"`
-		Ip           string    `json:"cip"`
-		UserName     string    `json:"user"`
-		At           time.Time `json:"at"`
-	}
-
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
@@ -139,7 +128,7 @@ func (ts *desktopServer) updateDesktopHandler(w http.ResponseWriter, req *http.R
 		return
 	}
 
-	err2 := ts.store.UpdateDesktop(rd.Id, rd.ComputerName, rd.Ip, rd.UserName, rd.At)
+	err2 := ts.store.UpdateDesktop(rd.ComputerName, rd.UserName, rd.Ip, rd.At)
 	if err2 != nil {
 		http.Error(w, err2.Error(), http.StatusNotFound)
 	}
@@ -152,6 +141,5 @@ func main() {
 	mux.HandleFunc("/unregister/", server.unregisterDesktopHandler)
 	mux.HandleFunc("/update/", server.updateDesktopHandler)
 
-	//log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("SERVERPORT"), mux))
-	log.Fatal(http.ListenAndServe("localhost:8082", mux))
+	log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("SERVERPORT"), mux))
 }

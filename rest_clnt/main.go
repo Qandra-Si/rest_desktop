@@ -27,6 +27,7 @@ func NewDesktopClient() *desktopClient {
 	return &desktopClient{}
 }
 
+// GetParams возвращает типичный набор параметров для отправки серверу
 func (dc *desktopClient) GetParams() (*bytes.Buffer, error) {
 	UserName, err := user.Current()
 	if err != nil {
@@ -52,6 +53,7 @@ func (dc *desktopClient) GetParams() (*bytes.Buffer, error) {
 	return bytes.NewBuffer(js), nil
 }
 
+// GetUrl тут могут быть какие-то особые формирователи url
 func (dc *desktopClient) GetUrl(operation string) (string, string, error) {
 	method := ""
 	if operation == "register" {
@@ -63,14 +65,14 @@ func (dc *desktopClient) GetUrl(operation string) (string, string, error) {
 	} else {
 		return "", "", fmt.Errorf("unable to create url for %s method", operation)
 	}
-	return fmt.Sprintf("http://localhost:8082/%s/", operation), method, nil
+	return fmt.Sprintf("http://localhost:%s/%s/", os.Getenv("SERVERPORT"), operation), method, nil
 }
 
 func main() {
 	client := NewDesktopClient()
 	operation := "register"
 	if len(os.Args) >= 2 {
-		operation = os.Args[1]
+		operation = os.Args[1] // разрешено : register, unregister, update
 	}
 	url, method, err := client.GetUrl(operation)
 	if err != nil {
